@@ -2,8 +2,8 @@
 #  error "this header file must not be included directly"
 #endif
 
-typedef struct {
-    PyObject_VAR_HEAD
+typedef struct {                                                            // 空 list ([]) 占用 56 bytes ( 64 位下 )
+    PyObject_VAR_HEAD                                                       // 每个指针 8 bytes ( 64 位下 )
     /* Vector of pointers to list elements.  list[0] is ob_item[0], etc. */
     PyObject **ob_item;
 

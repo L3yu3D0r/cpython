@@ -142,7 +142,7 @@ list_extend(PyObject *self, PyObject *iterable)
 {
     PyObject *return_value = NULL;
 
-    return_value = list_extend_impl((PyListObject *)self, iterable);
+    return_value = list_extend_impl((PyListObject *)self, iterable);    // 调用链: ...=>
 
     return return_value;
 }

@@ -105,17 +105,17 @@ ensure_shared_on_resize(PyListObject *self)
  * than ob_size on entry.
  */
 static int
-list_resize(PyListObject *self, Py_ssize_t newsize)
+list_resize(PyListObject *self, Py_ssize_t newsize)                                                 // BV19S4y1F7xq
 {
     size_t new_allocated, target_bytes;
-    Py_ssize_t allocated = self->allocated;
-
+    Py_ssize_t allocated = self->allocated;                                                         // 现在已申请的内存
+                                                                                                    // 不一定被使用
     /* Bypass realloc() when a previous overallocation is large enough
        to accommodate the newsize.  If the newsize falls lower than half
        the allocated size, then proceed with the realloc() to shrink the list.
     */
-    if (allocated >= newsize && newsize >= (allocated >> 1)) {
-        assert(self->ob_item != NULL || newsize == 0);
+    if (allocated >= newsize && newsize >= (allocated >> 1)) {                                      // if alloc/2 <= size <= alloc
+        assert(self->ob_item != NULL || newsize == 0);                                              // 不分配
         Py_SET_SIZE(self, newsize);
         return 0;
     }
@@ -273,23 +273,23 @@ PyList_New(Py_ssize_t size)
 }
 
 static PyObject *
-list_new_prealloc(Py_ssize_t size)
+list_new_prealloc(Py_ssize_t size)                      // https://www.bilibili.com/video/BV19S4y1F7xq
 {
     assert(size > 0);
-    PyListObject *op = (PyListObject *) PyList_New(0);
+    PyListObject *op = (PyListObject *) PyList_New(0);  // 分配占位
     if (op == NULL) {
         return NULL;
     }
     assert(op->ob_item == NULL);
-#ifdef Py_GIL_DISABLED
+#ifdef Py_GIL_DISABLED                                  // NOGIL
     _PyListArray *array = list_allocate_array(size);
     if (array == NULL) {
         Py_DECREF(op);
         return PyErr_NoMemory();
     }
     op->ob_item = array->ob_item;
-#else
-    op->ob_item = PyMem_New(PyObject *, size);
+#else                                                   // Normal
+    op->ob_item = PyMem_New(PyObject *, size);          // 向操作系统申请内存: 需要多少申请多少
     if (op->ob_item == NULL) {
         Py_DECREF(op);
         return PyErr_NoMemory();
@@ -517,8 +517,8 @@ PyList_Insert(PyObject *op, Py_ssize_t where, PyObject *newitem)
 
 /* internal, used by _PyList_AppendTakeRef */
 int
-_PyList_AppendTakeRefListResize(PyListObject *self, PyObject *newitem)
-{
+_PyList_AppendTakeRefListResize(PyListObject *self, PyObject *newitem)  // https://www.bilibili.com/video/BV19S4y1F7xq
+{                                                                       // 原 app1
     Py_ssize_t len = Py_SIZE(self);
     assert(self->allocated == -1 || self->allocated == len);
     if (list_resize(self, len + 1) < 0) {
@@ -787,18 +787,18 @@ list_concat(PyObject *aa, PyObject *bb)
 }
 
 static PyObject *
-list_repeat_lock_held(PyListObject *a, Py_ssize_t n)
+list_repeat_lock_held(PyListObject *a, Py_ssize_t n)                            // https://www.bilibili.com/video/BV19S4y1F7xq
 {
-    const Py_ssize_t input_size = Py_SIZE(a);
-    if (input_size == 0 || n <= 0)
-        return PyList_New(0);
+    const Py_ssize_t input_size = Py_SIZE(a);                                   // list 大小
+    if (input_size == 0 || n <= 0)                                              // if list 为空 || 重复次数<=0
+        return PyList_New(0);                                                   // 新建 list(0)
     assert(n > 0);
 
-    if (input_size > PY_SSIZE_T_MAX / n)
-        return PyErr_NoMemory();
-    Py_ssize_t output_size = input_size * n;
+    if (input_size > PY_SSIZE_T_MAX / n)                                        // if list_size > 最大索引长度/重复次数 (内存不足)
+        return PyErr_NoMemory();                                                // 无内存
+    Py_ssize_t output_size = input_size * n;                                    // 计算需要的内存
 
-    PyListObject *np = (PyListObject *) list_new_prealloc(output_size);
+    PyListObject *np = (PyListObject *) list_new_prealloc(output_size);         // 申请内存
     if (np == NULL)
         return NULL;
 
@@ -829,10 +829,10 @@ list_repeat_lock_held(PyListObject *a, Py_ssize_t n)
 }
 
 static PyObject *
-list_repeat(PyObject *aa, Py_ssize_t n)
+list_repeat(PyObject *aa, Py_ssize_t n)     // https://www.bilibili.com/video/BV19S4y1F7xq
 {
     PyObject *ret;
-    PyListObject *a = (PyListObject *)aa;
+    PyListObject *a = (PyListObject *)aa;   // 从 PyObject 转为 PyListObject
     Py_BEGIN_CRITICAL_SECTION(a);
     ret = list_repeat_lock_held(a, n);
     Py_END_CRITICAL_SECTION();
@@ -1184,8 +1184,8 @@ list_append_impl(PyListObject *self, PyObject *object)
 }
 
 static int
-list_extend_fast(PyListObject *self, PyObject *iterable)
-{
+list_extend_fast(PyListObject *self, PyObject *iterable)                    // https://www.bilibili.com/video/BV19S4y1F7xq
+{                                                                           // 原 list_extend
     Py_ssize_t n = PySequence_Fast_GET_SIZE(iterable);
     if (n == 0) {
         /* short circuit when iterable is empty */
@@ -1202,8 +1202,8 @@ list_extend_fast(PyListObject *self, PyObject *iterable)
         }
         Py_SET_SIZE(self, n);
     }
-    else if (list_resize(self, m + n) < 0) {
-        return -1;
+    else if (list_resize(self, m + n) < 0) {                                // 先检测当前大小，再检测另一个参数大小
+        return -1;                                                          // 使用 list_resize 来改变自己分配内存的量
     }
 
     // note that we may still have self == iterable here for the

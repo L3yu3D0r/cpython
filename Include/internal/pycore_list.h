@@ -32,8 +32,8 @@ _PyList_AppendTakeRefListResize(PyListObject *self, PyObject *newitem);
 
 // In free-threaded build: self should be locked by the caller, if it should be thread-safe.
 static inline int
-_PyList_AppendTakeRef(PyListObject *self, PyObject *newitem)
-{
+_PyList_AppendTakeRef(PyListObject *self, PyObject *newitem)        // https://www.bilibili.com/video/BV19S4y1F7xq
+{                                                                   // 原 app1 的扩展
     assert(self != NULL && newitem != NULL);
     assert(PyList_Check(self));
     Py_ssize_t len = Py_SIZE(self);
@@ -48,7 +48,7 @@ _PyList_AppendTakeRef(PyListObject *self, PyObject *newitem)
         Py_SET_SIZE(self, len + 1);
         return 0;
     }
-    return _PyList_AppendTakeRefListResize(self, newitem);
+    return _PyList_AppendTakeRefListResize(self, newitem);          // 实际使用
 }
 
 // Repeat the bytes of a buffer in place
