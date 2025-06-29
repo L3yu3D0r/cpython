@@ -166,7 +166,7 @@ struct _object {
     uint8_t ob_gc_bits;         // gc-related state
     uint32_t ob_ref_local;      // local reference count
     Py_ssize_t ob_ref_shared;   // shared (atomic) reference count
-    PyTypeObject *ob_type;
+    PyTypeObject *ob_ty pe;
 };
 #endif
 
